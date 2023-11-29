@@ -2,24 +2,48 @@
             digraph g {
             rankdir   =  TB;
             graph[ranksep = 1.3, nodesep = 0.5, style = "rounded, filled"]
-            Node0x5648397b94b0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="/"] 
+            Node0x604000000750[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="/"] 
  
-Node0x5648397b94e0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="+"] 
+Node0x604000000710[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="-"] 
  
-Node0x5648397b9510[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="7.000000"] 
+Node0x604000000550[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="-"] 
  
-Node0x5648397b9540[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="x"] 
+Node0x604000000590[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="10.000000"] 
  
-Node0x5648397b9570[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="-"] 
+Node0x6040000005d0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="x"] 
  
-Node0x5648397b95a0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="10.000000"] 
+Node0x604000000510[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="*"] 
  
-Node0x5648397b95d0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="x"] 
+Node0x604000000450[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="+"] 
  
-Node0x5648397b94b0->Node0x5648397b94e0
-Node0x5648397b94e0->Node0x5648397b9510
-Node0x5648397b94e0->Node0x5648397b9540
-Node0x5648397b94b0->Node0x5648397b9570
-Node0x5648397b9570->Node0x5648397b95a0
-Node0x5648397b9570->Node0x5648397b95d0
+Node0x604000000490[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="7.000000"] 
+ 
+Node0x6040000004d0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="x"] 
+ 
+Node0x604000000410[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="-1.000000"] 
+ 
+Node0x604000000350[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="^"] 
+ 
+Node0x604000000290[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="-"] 
+ 
+Node0x6040000002d0[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="10.000000"] 
+ 
+Node0x604000000310[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="x"] 
+ 
+Node0x604000000250[shape=rectangle, color="red", width=0.2, style="filled",fillcolor="lightblue", label="2.000000"] 
+ 
+Node0x604000000750->Node0x604000000710
+Node0x604000000710->Node0x604000000550
+Node0x604000000550->Node0x604000000590
+Node0x604000000550->Node0x6040000005d0
+Node0x604000000710->Node0x604000000510
+Node0x604000000510->Node0x604000000450
+Node0x604000000450->Node0x604000000490
+Node0x604000000450->Node0x6040000004d0
+Node0x604000000510->Node0x604000000410
+Node0x604000000750->Node0x604000000350
+Node0x604000000350->Node0x604000000290
+Node0x604000000290->Node0x6040000002d0
+Node0x604000000290->Node0x604000000310
+Node0x604000000350->Node0x604000000250
 }

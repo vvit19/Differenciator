@@ -1,5 +1,5 @@
-#ifndef TREE_H
-#define TREE_H
+#ifndef DIFF_H
+#define DIFF_H
 
 #include <cassert>
 #include <cstdlib>
@@ -34,7 +34,8 @@ enum Operations
     DIV,
     SIN,
     COS,
-    POW
+    POW,
+    LN
 };
 
 struct CharOperation
@@ -51,7 +52,8 @@ const CharOperation OperationsArray[] =
     {DIV, '/'},
     {SIN, 'S'},
     {COS, 'C'},
-    {POW, '^'}
+    {POW, '^'},
+    {LN,  'L'}
 };
 
 union Value
@@ -70,11 +72,14 @@ struct Node
     Value value;
 };
 
-Node* Diff       (Node* node);
-Node* CreateNode (Node* left, Node* right, Types type, ...);
-Node* CopyNode   (Node* original_node);
-void  TreeDtor   (Node* node);
-char* GetTree    (Node* node, char* buffer);
-void  TreeDump   (Node* node);
+Node*  Diff       (Node* node);
+elem_t Eval       (Node* node, elem_t var_value);
+Node*  CreateNode (Node* left, Node* right, Types type, ...);
+Node*  CopyNode   (Node* original_node);
+void   TreeDtor   (Node* node);
+char*  GetTree    (Node* node, char* buffer);
+void   TreeDump   (Node* node);
+void   PrintTree  (Node* node);
+void   Optimize   (Node* node);
 
 #endif

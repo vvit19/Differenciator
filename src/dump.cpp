@@ -1,18 +1,17 @@
-#include "tree.h"
+#include "differenciator.h"
 
-static void NodeDump        (FILE* dot, Node* node);
-static void DrawConnections (FILE* dot, Node* node);
-static void PrintTabs       (FILE* file, int level);
+static void NodeDump        (FILE* file, Node* node);
+static void DrawConnections (FILE* file, Node* node);
 
 const char* const dot_file = "dump.dot";
 
-#define _print(...) fprintf (dot, __VA_ARGS__)
+#define _print(...) fprintf (file, __VA_ARGS__)
 
 void TreeDump (Node* node)
 {
     assert (node);
 
-    FILE* dot = fopen (dot_file, "w");
+    FILE* file = fopen (dot_file, "w");
 
     _print (R"(
             digraph g {
@@ -20,18 +19,18 @@ void TreeDump (Node* node)
             graph[ranksep = 1.3, nodesep = 0.5, style = "rounded, filled"]
             )");
 
-    NodeDump (dot, node);
+    NodeDump (file, node);
 
-    DrawConnections (dot, node);
+    DrawConnections (file, node);
 
     _print ("}\n");
 
-    fclose (dot);
+    fclose (file);
 
     system ("dot -Tpng dump.dot -o tree.png");
 }
 
-void NodeDump (FILE* dot, Node* node)
+void NodeDump (FILE* file, Node* node)
 {
     if (node == nullptr) return;
 
@@ -54,21 +53,26 @@ void NodeDump (FILE* dot, Node* node)
                 node, node->value.num);
     }
 
-    NodeDump (dot, node->left);
-    NodeDump (dot, node->right);
+    NodeDump (file, node->left);
+    NodeDump (file, node->right);
 }
 
-static void DrawConnections (FILE* dot, Node* node)
+static void DrawConnections (FILE* file, Node* node)
 {
     if (node->left)
     {
         _print ("Node%p->Node%p\n", node, node->left);
-        DrawConnections (dot, node->left);
+        DrawConnections (file, node->left);
     }
 
     if (node->right)
     {
         _print ("Node%p->Node%p\n", node, node->right);
-        DrawConnections (dot, node->right);
+        DrawConnections (file, node->right);
     }
+}
+
+void PrintTree (Node* node)
+{
+    if (!node) return;
 }

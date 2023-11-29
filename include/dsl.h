@@ -1,7 +1,7 @@
 #ifndef DSL_H
 #define DSL_H
 
-#include "tree.h"
+#include "differenciator.h"
 
 #define dL Diff (node->left)
 #define dR Diff (node->right)
@@ -14,5 +14,7 @@
 #define  _DIV(L, R)  CreateNode (L, R, OP, DIV )
 #define  _SIN(L, R)  CreateNode (L, R, OP, SIN )
 #define  _COS(L, R)  CreateNode (L, R, OP, COS )
+#define  _POW(L, R)  CreateNode (L, R, OP, POW )
+#define   _LN(L, R)  CreateNode (L, R, OP, LN  )
 
 #endif

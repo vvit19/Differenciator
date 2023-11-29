@@ -1,4 +1,4 @@
-#include "tree.h"
+#include "differenciator.h"
 
 Node* CreateNode (Node* left, Node* right, Types type, ...)
 {
@@ -51,6 +51,15 @@ char* GetTree (Node* main_node, char* buffer)
     }
     buffer++;
 
+    if (main_node->type == OP)
+    {
+        if (main_node->value.op == SIN || main_node->value.op == COS || main_node->value.op == LN)
+        {
+            Node* fict_node = CreateNode (nullptr, nullptr, NO_TYPE);
+            main_node->left = fict_node;
+        }
+    }
+
     char* return_value = buffer;
 
     Node* node = nullptr;
@@ -80,11 +89,11 @@ char* GetTree (Node* main_node, char* buffer)
             return GetTree (main_node, return_value);
         }
 
-        for (int j = 0; j < sizeof (OperationsArray) / sizeof (CharOperation); j++)
+        for (size_t i = 0; i < sizeof (OperationsArray) / sizeof (CharOperation); i++)
         {
-            if (*buffer == OperationsArray[j].op_char)
+            if (*buffer == OperationsArray[i].op_char)
             {
-                node = CreateNode (nullptr, nullptr, OP, OperationsArray[j].op_name);
+                node = CreateNode (nullptr, nullptr, OP, OperationsArray[i].op_name);
                 if (main_node->left) { main_node->right = node; return GetTree (node, return_value); } //для самой начальной ноды заполняю левого сына ей же
                 main_node->left = node;
                 buffer = GetTree (node, return_value);
@@ -93,9 +102,9 @@ char* GetTree (Node* main_node, char* buffer)
         }
 
         char variable[MAX_VAR_LENGTH] = "";
-        for (int k = 0; k < MAX_VAR_LENGTH && !isspace (*buffer) && *buffer != '\0' && *buffer != ')'; k++)
+        for (size_t i = 0; i < MAX_VAR_LENGTH && !isspace (*buffer) && *buffer != '\0' && *buffer != ')'; i++)
         {
-            variable[k] = *buffer;
+            variable[i] = *buffer;
             buffer++;
         }
 
@@ -110,15 +119,13 @@ char* GetTree (Node* main_node, char* buffer)
 
 void TreeDtor (Node* node)
 {
-    if (node == nullptr) return;
+    if (node->left)  TreeDtor (node->left);
+    if (node->right) TreeDtor (node->right);
 
-    TreeDtor (node->left);
-    free (node->left);
-    node->left = nullptr;
+    if (!node) return;
 
-    TreeDtor (node->right);
-    free (node->right);
-    node->right = nullptr;
+    free (node);
+    node = nullptr;
 }
 
 Node* CopyNode (Node* original_node)
@@ -128,10 +135,10 @@ Node* CopyNode (Node* original_node)
     Node* node = (Node*) calloc (1, sizeof (Node));
     assert (node);
 
-    node->left   = original_node->left;
-    node->right  = original_node->right;
-    node->type   = original_node->type;
-    node->value  = original_node->value;
+    *node = *original_node;
+
+    if (original_node->left)  node->left  = CopyNode (original_node->left);
+    if (original_node->right) node->right = CopyNode (original_node->right);
 
     return node;
 }
