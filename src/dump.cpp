@@ -134,7 +134,8 @@ void TexDumpBegin ()
                  \author{Савченко Виталий, Б01-306}
                  \title{Учебник по матану}
                  \begin{document}
-                 \maketitle )");
+                 \maketitle
+                 \begin{flushleft} )");
     _print ("\n");
 
     fclose (file);
@@ -144,9 +145,14 @@ void TexDumpEnd ()
 {
     FILE* file = fopen (OUTPUT_TEX, "a");
 
-    _print (R"(\end{document})");
+    _print (R"(\end{flushleft}
+               \end{document})");
 
     fclose (file);
+
+    char command[MAX_TEXT_LENGTH] = "";
+    sprintf (command, "pdflatex >/dev/null %s", OUTPUT_TEX);
+    system (command);
 }
 
 void TexDumpNode (Node* node, Node* main_node, FILE* file)
@@ -179,19 +185,19 @@ void TexDumpNode (Node* node, Node* main_node, FILE* file)
 
         case SIN:
             _print ("\\sin{(");
-            TexDumpNode (node->right, main_node, file);
+            TexDumpNode (node->left, main_node, file);
             _print (")}");
             break;
 
         case COS:
             _print ("\\cos{(");
-            TexDumpNode (node->right, main_node, file);
+            TexDumpNode (node->left, main_node, file);
             _print (")}");
             break;
 
         case LN:
             _print ("\\ln{(");
-            TexDumpNode (node->right, main_node, file);
+            TexDumpNode (node->left, main_node, file);
             _print (")}");
             break;
 

@@ -13,25 +13,17 @@ int main ()
     main_node->right = GetGrammar (buffer);
     free (buffer);
 
-    Node* aboba  = main_node->right;
+    Node* aboba  = Diff (main_node->right);
+    Optimize (aboba);
     GraphDump (aboba);
-    Node* abobus = NULL;
-    for (int i = 0; i < 1; i++)
-    {
-        abobus = aboba;
-        aboba = Diff (aboba);
-        Optimize (aboba);
-        TexDumpDerivative (abobus, aboba, "Итого получается: \n");
-        TreeDtor (abobus);
-        GraphDump (aboba);
-    }
-
-    TreeDtor (aboba);
-
+    TexDumpDerivative (main_node->right, aboba, "Итого имеем:\n");
 
     // elem_t a = Eval (aboba, 1.0);
     // printf ("%lf\n", a);
 
     TexDumpEnd ();
+
+    TreeDtor (aboba);
+    TreeDtor (main_node->right);
     free (main_node);
 }

@@ -12,7 +12,7 @@
 
 typedef double elem_t;
 
-const int MAX_VAR_LENGTH = 100;
+const int MAX_TEXT_LENGTH = 100;
 
 enum Ways
 {
@@ -55,7 +55,7 @@ union Value
 {
     elem_t num;
     Operations op;
-    char var[MAX_VAR_LENGTH];
+    char var[MAX_TEXT_LENGTH];
 };
 
 struct Node

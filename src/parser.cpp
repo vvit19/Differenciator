@@ -4,8 +4,10 @@
 const int MAX_TOKENS = 2048;
 
 static void  Lexer (Token* tokens, char* buffer);
+
 static Node* GetE  (Token* tokens, int* cur_token); // +-
 static Node* GetT  (Token* tokens, int* cur_token); // */
+static Node* GetS  (Token* tokens, int* cur_token); // ^
 static Node* GetU  (Token* tokens, int* cur_token); // unary: sin, cos, ln
 static Node* GetP  (Token* tokens, int* cur_token); // ()
 static Node* GetV  (Token* tokens, int* cur_token); // variables
@@ -37,10 +39,30 @@ static Node* GetT (Token* tokens, int* cur_token)
     assert (tokens);
     assert (cur_token);
 
-    Node* main_node = GetU (tokens, cur_token);
+    Node* main_node = GetS (tokens, cur_token);
 
     while (tokens[*cur_token].type == OP &&
           (tokens[*cur_token].value.op == MULT || tokens[*cur_token].value.op == DIV))
+    {
+        Operations op = tokens[*cur_token].value.op;
+        *cur_token += 1;
+
+        Node* sub_node = GetS (tokens, cur_token);
+
+        main_node = CreateNode (main_node, sub_node, OP, op);
+    }
+
+    return main_node;
+}
+
+static Node* GetS (Token* tokens, int* cur_token)
+{
+    assert (tokens);
+    assert (cur_token);
+
+    Node* main_node = GetU (tokens, cur_token);
+
+    while (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == POW)
     {
         Operations op = tokens[*cur_token].value.op;
         *cur_token += 1;
@@ -65,12 +87,16 @@ static Node* GetU (Token* tokens, int* cur_token)
           (tokens[*cur_token].value.op == SIN || tokens[*cur_token].value.op == COS || tokens[*cur_token].value.op == LN))
     {
         Operations op = tokens[*cur_token].value.op;
-        printf ("aboba %d\n", op);
+
         *cur_token += 1;
-        //syn_ass '('
+        assert (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET);
         *cur_token += 1;
+
         main_node = GetE (tokens, cur_token);
-        *cur_token += 1; // skip ')'
+
+        assert (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
+        *cur_token += 1;
+
         main_node = CreateNode (main_node, nullptr, OP, op);
     }
 
@@ -116,7 +142,12 @@ static Node* GetN (Token* tokens, int* cur_token)
 
     Node* main_node = nullptr;
 
-    if (tokens[*cur_token].type == NUM)
+    if (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == SUB && tokens[*cur_token + 1].type == NUM)
+    {
+        main_node = CreateNode (nullptr, nullptr, NUM, (-1.0) * tokens[*cur_token + 1].value.num);
+        *cur_token += 2;
+    }
+    else if (tokens[*cur_token].type == NUM)
     {
         main_node = CreateNode (nullptr, nullptr, NUM, tokens[*cur_token].value.num);
         *cur_token += 1;
@@ -134,7 +165,7 @@ Node* GetGrammar (char* buffer)
     int cur_token = 0;
     Node* main_node = GetE (tokens, &cur_token);
 
-    //assert END (\0)
+    assert (tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
 
     return main_node;
 }
@@ -146,7 +177,7 @@ static void Lexer (Token* tokens, char* buffer)
     for (int i = 0; buffer[i] != '\0'; i++, tokens_cnt++)
     {
         i = SkipSpaces (buffer, i);
-        if (buffer[i] == '\0') return;
+        if (buffer[i] == '\0') break;
 
         tokens[tokens_cnt].type = NO_TYPE;
 
@@ -193,7 +224,7 @@ static void Lexer (Token* tokens, char* buffer)
             if (tokens[tokens_cnt].type != NO_TYPE) continue;
 
             tokens[tokens_cnt].type = VAR;
-            char variable[MAX_VAR_LENGTH] = "";
+            char variable[MAX_TEXT_LENGTH] = "";
             for (int k = 0; isalpha (buffer[i]) || buffer[i] == '_' || isdigit (buffer[i]); i++, k++) // do not forget to do i--
             {
                 variable[k] = buffer[i];

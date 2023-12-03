@@ -54,7 +54,7 @@ Node* Diff (Node* node)
 
     case LN:
     {
-        diff_node = _MULT (_DIV (CreateNode (nullptr, nullptr, NUM, 1.0), cR), dR);
+        diff_node = _MULT (_DIV (CreateNode (nullptr, nullptr, NUM, 1.0), cL), dL);
         break;
     }
 
