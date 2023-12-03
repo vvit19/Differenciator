@@ -1,6 +1,8 @@
 #ifndef DIFF_H
 #define DIFF_H
 
+#include "utils.h"
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -10,7 +12,7 @@
 
 typedef double elem_t;
 
-const int MAX_VAR_LENGTH = 10;
+const int MAX_VAR_LENGTH = 100;
 
 enum Ways
 {
@@ -35,7 +37,10 @@ enum Operations
     SIN,
     COS,
     POW,
-    LN
+    LN,
+    OPEN_BRACKET,
+    CLOSE_BRACKET,
+    END
 };
 
 struct CharOperation
@@ -44,17 +49,7 @@ struct CharOperation
     char op_char;
 };
 
-const CharOperation OperationsArray[] =
-{
-    {ADD, '+'},
-    {SUB, '-'},
-    {MULT, '*'},
-    {DIV, '/'},
-    {SIN, 'S'},
-    {COS, 'C'},
-    {POW, '^'},
-    {LN,  'L'}
-};
+const char* const OperationsArray[] = { "+", "-", "*", "/", "sin", "cos", "^", "ln" };
 
 union Value
 {
@@ -72,14 +67,18 @@ struct Node
     Value value;
 };
 
+struct Token
+{
+    Types type;
+    Value value;
+};
+
 Node*  Diff       (Node* node);
 elem_t Eval       (Node* node, elem_t var_value);
 Node*  CreateNode (Node* left, Node* right, Types type, ...);
 Node*  CopyNode   (Node* original_node);
 void   TreeDtor   (Node* node);
-char*  GetTree    (Node* node, char* buffer);
-void   TreeDump   (Node* node);
-void   PrintTree  (Node* node);
+Node*  GetGrammar (char* buffer);
 void   Optimize   (Node* node);
 
 #endif

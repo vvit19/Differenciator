@@ -1,10 +1,3 @@
-#include <cassert>
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#include <cmath>
-#include <cctype>
-
 #include "utils.h"
 
 char* get_file_content(const char* filename)
@@ -62,4 +55,13 @@ bool is_equal(double a, double b)
 void ClearBuffer ()
 {
     while (getchar () != '\n');
+}
+
+int SkipSpaces (char* buffer, int i)
+{
+    assert (buffer);
+
+    while (isspace (buffer[i])) i++;
+
+    return i;
 }

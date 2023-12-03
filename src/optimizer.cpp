@@ -79,8 +79,7 @@ int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
-
-    if (optimize_left == 0 && node->value.op == SUB)
+    else if (optimize_left == 0 && node->value.op == SUB)
     {
         node->left->type = NUM;
         node->left->value.num = -1;
@@ -89,8 +88,7 @@ int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
-
-    if ((optimize_left == 0 && node->value.op == ADD) || (optimize_left == 1 && node->value.op == MULT))
+    else if ((optimize_left == 0 && node->value.op == ADD) || (optimize_left == 1 && node->value.op == MULT))
     {
         if (node == parent->left) parent->left = node->right;
         else parent->right = node->right;
@@ -101,10 +99,23 @@ int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
+    else if (optimize_left == 1 && node->value.op == POW)
+    {
+        node->type = NUM;
+        node->value.num = 1;
 
-    if ((optimize_right == 0 && node->value.op == ADD)  ||
-        (optimize_right == 1 && node->value.op == MULT) ||
-        (optimize_right == 0 && node->value.op == SUB) )
+        TreeDtor (node->left);
+        TreeDtor (node->right);
+
+        node->left = nullptr;
+        node->right = nullptr;
+
+        *has_optimized = true;
+    }
+    else if ((optimize_right == 0 && node->value.op == ADD)  ||
+             (optimize_right == 1 && node->value.op == MULT) ||
+             (optimize_right == 0 && node->value.op == SUB)  ||
+             (optimize_right == 1 && node->value.op == POW))
     {
         if (node == parent->left) parent->left = node->left;
         else parent->right = node->left;
