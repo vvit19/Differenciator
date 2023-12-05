@@ -5,12 +5,12 @@
 
 #include <cmath>
 
-Node* Diff (Node* node)
+Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*))
 {
     assert (node);
 
-    if (node->type == NUM) { return CreateNode (nullptr, nullptr, NUM, 0.0); }
-    if (node->type == VAR) { return CreateNode (nullptr, nullptr, NUM, 1.0); }
+    if (node->type == NUM) { return _NUM (0.0); }
+    if (node->type == VAR) { return _NUM (1.0); }
 
     Node* diff_node = nullptr;
 
@@ -36,7 +36,7 @@ Node* Diff (Node* node)
 
     case DIV:
     {
-        diff_node = _DIV (_SUB (_MULT (dL, cR), _MULT (cL, dR)), _POW (cR, CreateNode (nullptr, nullptr, NUM, 2.0)));
+        diff_node = _DIV (_SUB (_MULT (dL, cR), _MULT (cL, dR)), _POW (cR, _NUM(2.0)));
         break;
     }
 
@@ -48,13 +48,13 @@ Node* Diff (Node* node)
 
     case COS:
     {
-        diff_node = _MULT (_MULT (_SIN (cL, nullptr), dL), CreateNode (nullptr, nullptr, NUM, -1.0));
+        diff_node = _MULT (_MULT (_SIN (cL, nullptr), dL), _NUM(-1.0));
         break;
     }
 
     case LN:
     {
-        diff_node = _MULT (_DIV (CreateNode (nullptr, nullptr, NUM, 1.0), cL), dL);
+        diff_node = _MULT (_DIV (_NUM(1.0), cL), dL);
         break;
     }
 
@@ -67,9 +67,9 @@ Node* Diff (Node* node)
         }
 
         if (node->right->type == NUM)
-            diff_node = _MULT (_MULT (cR, _POW (cL, CreateNode (nullptr, nullptr, NUM, node->right->value.num - 1))), dL);
+            diff_node = _MULT (_MULT (cR, _POW (cL, _NUM(node->right->value.num - 1))), dL);
         else
-            diff_node = _MULT (_MULT (_POW (cL, cR), CreateNode (nullptr, nullptr, NUM, log (node->left->value.num))), dR);
+            diff_node = _MULT (_MULT (_POW (cL, cR), _LN(cL, nullptr)), dR);
 
         break;
     }
@@ -80,7 +80,7 @@ Node* Diff (Node* node)
         return nullptr;
     }
 
-    TexDumpDerivative (node, diff_node, GetRandomPhraze ());
+    if (DumpFunction) DumpFunction (node, diff_node, GetRandomPhraze());
 
     return diff_node;
 }
@@ -101,10 +101,10 @@ elem_t Eval (Node* node, elem_t var_value)
     case SUB:  return left_value - right_value;
     case MULT: return left_value * right_value;
     case DIV:  return left_value / right_value;
-    case SIN:  return sin (right_value);
-    case COS:  return cos (right_value);
+    case SIN:  return sin (left_value);
+    case COS:  return cos (left_value);
     case POW:  return pow (left_value, right_value);
-    case LN:   return log (right_value);
+    case LN:   return log (left_value);
 
     default: printf ("Default case reached in file: %s, function: %s, line: %d",
                      __FILE__, __PRETTY_FUNCTION__, __LINE__);

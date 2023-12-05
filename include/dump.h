@@ -10,15 +10,16 @@ const char* const OUTPUT_TEX = "output.tex";
 
 const char* const PHRAZES[] =
 {
-    "Я бы посчитал это в уме, но вспомнил, кому считаю \n",
-    "В советское время даже зародыши знали, что получается: \n",
-    "Нетрудно видеть, что: \n",
-    "Методом пристального взгляда получаем: \n",
-    "Используя опыт и смекалку можно догадаться, что: \n",
-    "Заметим, что: \n"
+    "Я бы посчитал это в уме, но вспомнил, кому считаю \\\\ \n",
+    "В советское время даже зародыши знали, что получается: \\\\ \n",
+    "Нетрудно видеть, что: \\\\ \n",
+    "Методом пристального взгляда получаем: \\\\ \n",
+    "Используя опыт и смекалку можно догадаться, что: \\\\ \n",
+    "Заметим, что: \\\\ \n"
 };
 
 void TexDumpDerivative (Node* node, Node* diff_node, const char* phraze);
+void DumpTaylor (Node* main_node, int degree, double var);
 void TexDumpNode (Node* node, Node* main_node, FILE* file);
 void TexDumpBegin ();
 void TexDumpEnd   ();

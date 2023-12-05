@@ -52,11 +52,6 @@ bool is_equal(double a, double b)
     return fabs(a - b) < EPS;
 }
 
-void ClearBuffer ()
-{
-    while (getchar () != '\n');
-}
-
 int SkipSpaces (char* buffer, int i)
 {
     assert (buffer);
@@ -64,4 +59,10 @@ int SkipSpaces (char* buffer, int i)
     while (isspace (buffer[i])) i++;
 
     return i;
+}
+
+int Factorial (int n)
+{
+    if (n == 1 || n == 0) return 1;
+    return n * Factorial (n - 1);
 }

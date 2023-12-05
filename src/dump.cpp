@@ -14,15 +14,14 @@ void TexDumpDerivative (Node* node, Node* diff_node, const char* phraze)
     assert (phraze);
 
     FILE* tex = fopen (OUTPUT_TEX, "a");
-    fprintf (tex, "%s\n", phraze);
-    fprintf (tex, "\\begin{equation}\n");
+    fprintf (tex, "%s", phraze);
+    fprintf (tex, "$(");
 
-    fprintf (tex, "(");
     TexDumpNode (node, node, tex);
     fprintf (tex, ")' = ");
 
     TexDumpNode (diff_node, diff_node, tex);
-    fprintf (tex, "\n\\end{equation}\n");
+    fprintf (tex, "$ \\\\ \n");
 
     fclose (tex);
 }
@@ -128,9 +127,11 @@ void TexDumpBegin ()
     FILE* file = fopen (OUTPUT_TEX, "w");
 
     _print ( R"( \documentclass[a4paper,12pt]{article}
-                 \usepackage[T2A]{fontenc}
+                 \usepackage[T1]{fontenc}
                  \usepackage[utf8]{inputenc}
                  \usepackage[english,russian]{babel}
+                 \usepackage{pdfpages}
+                 \usepackage{ragged2e}
                  \author{Савченко Виталий, Б01-306}
                  \title{Учебник по матану}
                  \begin{document}
@@ -150,7 +151,7 @@ void TexDumpEnd ()
 
     fclose (file);
 
-    char command[MAX_TEXT_LENGTH] = "";
+    char command[MAX_COMMAND_LENGTH] = "";
     sprintf (command, "pdflatex >/dev/null %s", OUTPUT_TEX);
     system (command);
 }
@@ -209,4 +210,42 @@ void TexDumpNode (Node* node, Node* main_node, FILE* file)
             if (node != main_node) _print (")");
         }
     }
+}
+
+void DumpTaylor (Node* main_node, int degree, double var)
+{
+    FILE* tex = fopen (OUTPUT_TEX, "a");
+
+    Node* diff_node = nullptr;
+    elem_t val = Eval (main_node, var);
+
+    fprintf (tex, "Если что, я настолько в своем сознании преисполнился,"
+                  "что вы можете называть меня Тейлором\\\\ \n$");
+    TexDumpNode (main_node, main_node, tex);
+
+    if (!is_equal (val, 0.0)) fprintf (tex, " = %lf + ", val);
+    else fprintf (tex, " = ");
+
+    for (int i = 1; i <= degree; i++)
+    {
+        diff_node = Diff (main_node, nullptr);
+        Optimize (diff_node);
+
+        val = Eval (diff_node, var);
+
+        if (is_equal (var, 0.0)) fprintf (tex, "\\frac{%.3lf}{%d} x^%d + ", val, Factorial (i), i);
+        else if (var < 0) fprintf (tex, "\\frac{%.3lf}{%d} (x + %.3lf)^%d + ", val, Factorial (i), -var, i);
+        else fprintf (tex, "\\frac{%.3lf}{%d} (x - %.3lf)^%d + ", val, Factorial (i), var, i);
+
+        if (i != 1) TreeDtor (main_node);
+        main_node = diff_node;
+    }
+
+    TreeDtor (diff_node);
+
+    if (is_equal (var, 0.0)) fprintf (tex, "o(x^%d), x \\to 0 $", degree);
+    else if (var < 0) fprintf (tex, "o((x + %.3lf)^%d), x \\to %.3lf $", -var, degree, var);
+    else fprintf (tex, "o((x - %.3lf)^%d), x \\to %.3lf $", var, degree, var);
+
+    fclose (tex);
 }

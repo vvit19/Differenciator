@@ -1,7 +1,8 @@
 #include "differenciator.h"
 #include "utils.h"
+#include "dsl.h"
 
-const int MAX_TOKENS = 2048;
+const int MAX_TOKENS = 1024;
 
 static void  Lexer (Token* tokens, char* buffer);
 
@@ -89,12 +90,12 @@ static Node* GetU (Token* tokens, int* cur_token)
         Operations op = tokens[*cur_token].value.op;
 
         *cur_token += 1;
-        assert (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET);
+        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET);
         *cur_token += 1;
 
         main_node = GetE (tokens, cur_token);
 
-        assert (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
+        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
         *cur_token += 1;
 
         main_node = CreateNode (main_node, nullptr, OP, op);
@@ -112,6 +113,8 @@ static Node* GetP (Token* tokens, int* cur_token)
     {
         *cur_token += 1;
         Node* main_node = GetE (tokens, cur_token);
+
+        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
         *cur_token += 1;
 
         return main_node;
@@ -144,12 +147,12 @@ static Node* GetN (Token* tokens, int* cur_token)
 
     if (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == SUB && tokens[*cur_token + 1].type == NUM)
     {
-        main_node = CreateNode (nullptr, nullptr, NUM, (-1.0) * tokens[*cur_token + 1].value.num);
+        main_node = _NUM((-1.0) * tokens[*cur_token + 1].value.num);
         *cur_token += 2;
     }
-    else if (tokens[*cur_token].type == NUM)
+    if (tokens[*cur_token].type == NUM)
     {
-        main_node = CreateNode (nullptr, nullptr, NUM, tokens[*cur_token].value.num);
+        main_node = _NUM(tokens[*cur_token].value.num);
         *cur_token += 1;
     }
 
@@ -165,7 +168,7 @@ Node* GetGrammar (char* buffer)
     int cur_token = 0;
     Node* main_node = GetE (tokens, &cur_token);
 
-    assert (tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
+    SYNT_ASSERT (tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
 
     return main_node;
 }
@@ -181,19 +184,7 @@ static void Lexer (Token* tokens, char* buffer)
 
         tokens[tokens_cnt].type = NO_TYPE;
 
-        if (buffer[i] == '(')
-        {
-            tokens[tokens_cnt].type     = OP;
-            tokens[tokens_cnt].value.op = OPEN_BRACKET;
-        }
-
-        else if (buffer[i] == ')')
-        {
-            tokens[tokens_cnt].type     = OP;
-            tokens[tokens_cnt].value.op = CLOSE_BRACKET;
-        }
-
-        else if (isdigit (buffer[i]))
+        if (isdigit (buffer[i]))
         {
             tokens[tokens_cnt].type = NUM;
 
@@ -201,6 +192,7 @@ static void Lexer (Token* tokens, char* buffer)
             tokens[tokens_cnt].value.num = strtod (&buffer[i], &end_ptr);
 
             while (&buffer[i] != end_ptr) i++;
+            i--;
         }
 
         else
@@ -212,7 +204,6 @@ static void Lexer (Token* tokens, char* buffer)
                 {
                     tokens[tokens_cnt].type = OP;
 
-                    strcpy (tokens[tokens_cnt].value.var, OperationsArray[cnt]);
                     i += op_length - 1;
 
                     tokens[tokens_cnt].value.op = (Operations) cnt;
@@ -224,7 +215,7 @@ static void Lexer (Token* tokens, char* buffer)
             if (tokens[tokens_cnt].type != NO_TYPE) continue;
 
             tokens[tokens_cnt].type = VAR;
-            char variable[MAX_TEXT_LENGTH] = "";
+            char variable[MAX_VAR_LENGTH] = "";
             for (int k = 0; isalpha (buffer[i]) || buffer[i] == '_' || isdigit (buffer[i]); i++, k++) // do not forget to do i--
             {
                 variable[k] = buffer[i];

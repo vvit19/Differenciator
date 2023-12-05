@@ -12,7 +12,8 @@
 
 typedef double elem_t;
 
-const int MAX_TEXT_LENGTH = 100;
+const int MAX_VAR_LENGTH  = 10;
+const int MAX_COMMAND_LENGTH = 100;
 
 enum Ways
 {
@@ -49,13 +50,13 @@ struct CharOperation
     char op_char;
 };
 
-const char* const OperationsArray[] = { "+", "-", "*", "/", "sin", "cos", "^", "ln" };
+const char* const OperationsArray[] = { "+", "-", "*", "/", "sin", "cos", "^", "ln", "(", ")" };
 
 union Value
 {
     elem_t num;
     Operations op;
-    char var[MAX_TEXT_LENGTH];
+    char var[MAX_VAR_LENGTH];
 };
 
 struct Node
@@ -73,7 +74,7 @@ struct Token
     Value value;
 };
 
-Node*  Diff       (Node* node);
+Node*  Diff       (Node* node, void (*DumpFunction) (Node*, Node*, const char*));
 elem_t Eval       (Node* node, elem_t var_value);
 Node*  CreateNode (Node* left, Node* right, Types type, ...);
 Node*  CopyNode   (Node* original_node);

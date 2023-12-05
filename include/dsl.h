@@ -3,10 +3,12 @@
 
 #include "differenciator.h"
 
-#define dL Diff (node->left)
-#define dR Diff (node->right)
+#define dL Diff (node->left, DumpFunction)
+#define dR Diff (node->right, DumpFunction)
 #define cL CopyNode (node->left)
 #define cR CopyNode (node->right)
+
+#define _NUM(val) CreateNode (nullptr, nullptr, NUM, val)
 
 #define  _ADD(L, R)  CreateNode (L, R, OP, ADD )
 #define  _SUB(L, R)  CreateNode (L, R, OP, SUB )
