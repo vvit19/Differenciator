@@ -4,22 +4,25 @@
 
 const int MAX_TOKENS = 1024;
 
-static void  Lexer (Token* tokens, char* buffer);
+static void  Lexer          (Token* tokens, char* buffer);
 
-static Node* GetE  (Token* tokens, int* cur_token); // +-
-static Node* GetT  (Token* tokens, int* cur_token); // */
-static Node* GetS  (Token* tokens, int* cur_token); // ^
-static Node* GetU  (Token* tokens, int* cur_token); // unary: sin, cos, ln
-static Node* GetP  (Token* tokens, int* cur_token); // ()
-static Node* GetV  (Token* tokens, int* cur_token); // variables
-static Node* GetN  (Token* tokens, int* cur_token); // numbers
+static Node* GetExpression  (Token* tokens, int* cur_token, ExitCodes* exit_code); // +-
+static Node* GetMult        (Token* tokens, int* cur_token, ExitCodes* exit_code); // */
+static Node* GetPower       (Token* tokens, int* cur_token, ExitCodes* exit_code); // ^
+static Node* GetUnary       (Token* tokens, int* cur_token, ExitCodes* exit_code); // unary: sin, cos, ln
+static Node* GetBrackets    (Token* tokens, int* cur_token, ExitCodes* exit_code); // ()
+static Node* GetVariable    (Token* tokens, int* cur_token, ExitCodes* exit_code); // variables
+static Node* GetNumber      (Token* tokens, int* cur_token, ExitCodes* exit_code); // numbers
 
-static Node* GetE (Token* tokens, int* cur_token)
+static Node* GetExpression (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
+    assert (exit_code);
 
-    Node* main_node = GetT (tokens, cur_token);
+    if (*exit_code == ERR) return nullptr;
+
+    Node* main_node = GetMult (tokens, cur_token, exit_code);
 
     while (tokens[*cur_token].type == OP &&
           (tokens[*cur_token].value.op == SUB || tokens[*cur_token].value.op == ADD))
@@ -27,7 +30,7 @@ static Node* GetE (Token* tokens, int* cur_token)
         Operations op = tokens[*cur_token].value.op;
         *cur_token += 1;
 
-        Node* sub_node = GetT (tokens, cur_token);
+        Node* sub_node = GetMult (tokens, cur_token, exit_code);
 
         main_node = CreateNode (main_node, sub_node, OP, op);
     }
@@ -35,12 +38,15 @@ static Node* GetE (Token* tokens, int* cur_token)
     return main_node;
 }
 
-static Node* GetT (Token* tokens, int* cur_token)
+static Node* GetMult (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
+    assert (exit_code);
 
-    Node* main_node = GetS (tokens, cur_token);
+    if (*exit_code == ERR) return nullptr;
+
+    Node* main_node = GetPower (tokens, cur_token, exit_code);
 
     while (tokens[*cur_token].type == OP &&
           (tokens[*cur_token].value.op == MULT || tokens[*cur_token].value.op == DIV))
@@ -48,7 +54,7 @@ static Node* GetT (Token* tokens, int* cur_token)
         Operations op = tokens[*cur_token].value.op;
         *cur_token += 1;
 
-        Node* sub_node = GetS (tokens, cur_token);
+        Node* sub_node = GetPower (tokens, cur_token, exit_code);
 
         main_node = CreateNode (main_node, sub_node, OP, op);
     }
@@ -56,19 +62,22 @@ static Node* GetT (Token* tokens, int* cur_token)
     return main_node;
 }
 
-static Node* GetS (Token* tokens, int* cur_token)
+static Node* GetPower (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
+    assert (exit_code);
 
-    Node* main_node = GetU (tokens, cur_token);
+    if (*exit_code == ERR) return nullptr;
+
+    Node* main_node = GetUnary (tokens, cur_token, exit_code);
 
     while (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == POW)
     {
         Operations op = tokens[*cur_token].value.op;
         *cur_token += 1;
 
-        Node* sub_node = GetU (tokens, cur_token);
+        Node* sub_node = GetUnary (tokens, cur_token, exit_code);
 
         main_node = CreateNode (main_node, sub_node, OP, op);
     }
@@ -77,12 +86,15 @@ static Node* GetS (Token* tokens, int* cur_token)
 }
 
 
-static Node* GetU (Token* tokens, int* cur_token)
+static Node* GetUnary (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
+    assert (exit_code);
 
-    Node* main_node = GetP (tokens, cur_token);
+    if (*exit_code == ERR) return nullptr;
+
+    Node* main_node = GetBrackets (tokens, cur_token, exit_code);
 
     while (tokens[*cur_token].type == OP &&
           (tokens[*cur_token].value.op == SIN || tokens[*cur_token].value.op == COS || tokens[*cur_token].value.op == LN))
@@ -90,12 +102,12 @@ static Node* GetU (Token* tokens, int* cur_token)
         Operations op = tokens[*cur_token].value.op;
 
         *cur_token += 1;
-        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET);
+        SYNT_ASSERT (exit_code, tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET);
         *cur_token += 1;
 
-        main_node = GetE (tokens, cur_token);
+        main_node = GetExpression (tokens, cur_token, exit_code);
 
-        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
+        SYNT_ASSERT (exit_code, tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
         *cur_token += 1;
 
         main_node = CreateNode (main_node, nullptr, OP, op);
@@ -104,7 +116,7 @@ static Node* GetU (Token* tokens, int* cur_token)
     return main_node;
 }
 
-static Node* GetP (Token* tokens, int* cur_token)
+static Node* GetBrackets (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
@@ -112,22 +124,22 @@ static Node* GetP (Token* tokens, int* cur_token)
     if (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == OPEN_BRACKET)
     {
         *cur_token += 1;
-        Node* main_node = GetE (tokens, cur_token);
+        Node* main_node = GetExpression (tokens, cur_token, exit_code);
 
-        SYNT_ASSERT (tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
+        SYNT_ASSERT (exit_code, tokens[*cur_token].type == OP && tokens[*cur_token].value.op == CLOSE_BRACKET);
         *cur_token += 1;
 
         return main_node;
     }
-    else return GetV (tokens, cur_token);
+    else return GetVariable (tokens, cur_token, exit_code);
 }
 
-static Node* GetV (Token* tokens, int* cur_token)
+static Node* GetVariable (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
 
-    Node* main_node = GetN (tokens, cur_token);
+    Node* main_node = GetNumber (tokens, cur_token, exit_code);
 
     if (tokens[*cur_token].type == VAR)
     {
@@ -138,7 +150,7 @@ static Node* GetV (Token* tokens, int* cur_token)
     return main_node;
 }
 
-static Node* GetN (Token* tokens, int* cur_token)
+static Node* GetNumber (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
     assert (cur_token);
@@ -165,10 +177,17 @@ Node* GetGrammar (char* buffer)
 
     Lexer (tokens, buffer);
 
+    ExitCodes exit_code = NO_ERR;
     int cur_token = 0;
-    Node* main_node = GetE (tokens, &cur_token);
+    Node* main_node = GetExpression (tokens, &cur_token, &exit_code);
 
-    SYNT_ASSERT (tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
+    SYNT_ASSERT (&exit_code, tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
+
+    if (exit_code == ERR)
+    {
+        TreeDtor (main_node);
+        return nullptr;
+    }
 
     return main_node;
 }

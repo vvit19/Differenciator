@@ -1,9 +1,9 @@
 #include "differenciator.h"
 
 static bool OptimizeConstants (Node* node, bool* has_optimized);
-static int  OptimizeNeutrals  (Node* parent, Node* node, bool* has_optimized);
+static int  OptimizeNeutrals  (Node** parent, Node* node, bool* has_optimized);
 
-void Optimize (Node* node)
+void Optimize (Node** node)
 {
     assert (node);
 
@@ -11,8 +11,8 @@ void Optimize (Node* node)
 
     while (true)
     {
-        OptimizeConstants (node, &has_optimized);
-        OptimizeNeutrals  (node, node, &has_optimized);
+        OptimizeConstants (*node, &has_optimized);
+        OptimizeNeutrals  (node, *node, &has_optimized);
 
         if (has_optimized == false) return;
         has_optimized = false;
@@ -50,20 +50,20 @@ bool OptimizeConstants (Node* node, bool* has_optimized)
     return false;
 }
 
-int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
+int OptimizeNeutrals (Node** parent, Node* node, bool* has_optimized)
 {
     assert (parent);
     assert (node);
 
-    if (node->type == NUM) return (int) node->value.num;
+    if (node->type == NUM && isInt (node->value.num)) return (int) node->value.num;
 
     if (node->type == VAR) return -1;
 
     int optimize_left  = -1;
     int optimize_right = -1;
 
-    if (node->left)  optimize_left  = OptimizeNeutrals (node, node->left,  has_optimized);
-    if (node->right) optimize_right = OptimizeNeutrals (node, node->right, has_optimized);
+    if (node->left)  optimize_left  = OptimizeNeutrals (&node, node->left,  has_optimized);
+    if (node->right) optimize_right = OptimizeNeutrals (&node, node->right, has_optimized);
 
     if ( (optimize_left  == 0 && (node->value.op == MULT || node->value.op == DIV || node->value.op == POW)) ||
          (optimize_right == 0 && (node->value.op == MULT)) )
@@ -90,8 +90,15 @@ int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
     }
     else if ((optimize_left == 0 && node->value.op == ADD) || (optimize_left == 1 && node->value.op == MULT))
     {
-        if (node == parent->left) parent->left = node->right;
-        else parent->right = node->right;
+        if (node == *parent)
+        {
+            *parent = node->right;
+        }
+        else
+        {
+            if (node == (*parent)->left) (*parent)->left = node->right;
+            else (*parent)->right = node->right;
+        }
 
         TreeDtor (node->left);
         free (node);
@@ -117,8 +124,12 @@ int OptimizeNeutrals (Node* parent, Node* node, bool* has_optimized)
              (optimize_right == 0 && node->value.op == SUB)  ||
              (optimize_right == 1 && node->value.op == POW))
     {
-        if (node == parent->left) parent->left = node->left;
-        else parent->right = node->left;
+        if (node == *parent) *parent = node->left;
+        else
+        {
+            if (node == (*parent)->left) (*parent)->left = node->left;
+            else (*parent)->right = node->left;
+        }
 
         TreeDtor (node->right);
         free (node);

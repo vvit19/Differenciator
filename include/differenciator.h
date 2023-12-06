@@ -12,8 +12,9 @@
 
 typedef double elem_t;
 
-const int MAX_VAR_LENGTH  = 10;
+const int MAX_VAR_LENGTH  = 20;
 const int MAX_COMMAND_LENGTH = 100;
+const int delta = 3;
 
 enum Ways
 {
@@ -74,12 +75,14 @@ struct Token
     Value value;
 };
 
-Node*  Diff       (Node* node, void (*DumpFunction) (Node*, Node*, const char*));
+Node*  Diff       (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool));
 elem_t Eval       (Node* node, elem_t var_value);
 Node*  CreateNode (Node* left, Node* right, Types type, ...);
 Node*  CopyNode   (Node* original_node);
 void   TreeDtor   (Node* node);
 Node*  GetGrammar (char* buffer);
-void   Optimize   (Node* node);
+void   Optimize   (Node** node);
+Node*  Taylor     (Node* main_node, int degree, elem_t var_value);
+Node*  Tangent    (Node* node, Node* diff, double x);
 
 #endif

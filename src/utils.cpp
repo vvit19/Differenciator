@@ -66,3 +66,8 @@ int Factorial (int n)
     if (n == 1 || n == 0) return 1;
     return n * Factorial (n - 1);
 }
+
+bool isInt (double n)
+{
+    return is_equal (n, round (n));
+}

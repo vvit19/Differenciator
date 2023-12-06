@@ -1,5 +1,6 @@
 #include "differenciator.h"
 #include "dump.h"
+#include "dsl.h"
 
 #include <random>
 #include <time.h>
@@ -7,20 +8,22 @@
 static void GraphNodeDump   (FILE* file, Node* node);
 static void DrawConnections (FILE* file, Node* node);
 
-void TexDumpDerivative (Node* node, Node* diff_node, const char* phraze)
+void TexDump (Node* node_1, Node* node_2, const char* phraze, bool dump_derivative)
 {
-    assert (node);
-    assert (diff_node);
+    assert (node_1);
+    assert (node_2);
     assert (phraze);
 
     FILE* tex = fopen (OUTPUT_TEX, "a");
     fprintf (tex, "%s", phraze);
-    fprintf (tex, "$(");
+    fprintf (tex, "$");
+    if (dump_derivative) fprintf (tex, "(");
 
-    TexDumpNode (node, node, tex);
-    fprintf (tex, ")' = ");
+    DumpNode (node_1, node_1, tex, true);
+    if (dump_derivative) fprintf (tex, ")' = ");
+    else fprintf (tex, " = ");
 
-    TexDumpNode (diff_node, diff_node, tex);
+    DumpNode (node_2, node_2, tex, true);
     fprintf (tex, "$ \\\\ \n");
 
     fclose (tex);
@@ -56,7 +59,7 @@ void GraphDump (Node* node)
     fclose (file);
 
     char dot_command[150] = "";
-    sprintf (dot_command, "dot -Tpng %s -o %s", OUTPUT_DOT, OUTPUT_PNG);
+    sprintf (dot_command, "dot -Tpng %s -o %s", OUTPUT_DOT, OUTPUT_TREE);
     system (dot_command);
 }
 
@@ -132,7 +135,6 @@ void TexDumpBegin ()
                  \usepackage[english,russian]{babel}
                  \usepackage{pdfpages}
                  \usepackage{ragged2e}
-                 \author{Савченко Виталий, Б01-306}
                  \title{Учебник по матану}
                  \begin{document}
                  \maketitle
@@ -146,6 +148,9 @@ void TexDumpEnd ()
 {
     FILE* file = fopen (OUTPUT_TEX, "a");
 
+    _print ("\\begin{center} \\includegraphics[scale=0.6]{%s} \\end{center}\n", OUTPUT_TAYLOR);
+    _print ("\\begin{center} \\includegraphics[scale=0.6]{%s} \\end{center}\n", OUTPUT_TANGENT);
+
     _print (R"(\end{flushleft}
                \end{document})");
 
@@ -156,7 +161,7 @@ void TexDumpEnd ()
     system (command);
 }
 
-void TexDumpNode (Node* node, Node* main_node, FILE* file)
+void DumpNode (Node* node, Node* main_node, FILE* file, bool tex_dump)
 {
     if (!node) return;
 
@@ -177,75 +182,132 @@ void TexDumpNode (Node* node, Node* main_node, FILE* file)
         switch (node->value.op)
         {
         case DIV:
-            _print ("\\frac{");
-            TexDumpNode (node->left, main_node, file);
-            _print ("}{");
-            TexDumpNode (node->right, main_node, file);
-            _print ("}");
+            if (tex_dump) _print ("\\frac{");
+
+            DumpNode (node->left, main_node, file, tex_dump);
+
+            if (tex_dump) _print ("}{");
+            else _print ("/");
+
+            DumpNode (node->right, main_node, file, tex_dump);
+            if (tex_dump) _print ("}");
+
             break;
 
         case SIN:
-            _print ("\\sin{(");
-            TexDumpNode (node->left, main_node, file);
-            _print (")}");
+            if (tex_dump) _print ("\\sin{(");
+            else _print ("sin((");
+
+            DumpNode (node->left, main_node, file, tex_dump);
+            if (tex_dump) _print (")}");
+            else _print ("))");
+
             break;
 
         case COS:
-            _print ("\\cos{(");
-            TexDumpNode (node->left, main_node, file);
-            _print (")}");
+            if (tex_dump) _print ("\\cos{(");
+            else _print ("cos((");
+
+            DumpNode (node->left, main_node, file, tex_dump);
+            if (tex_dump) _print (")}");
+
+            else _print ("))");
             break;
 
         case LN:
-            _print ("\\ln{(");
-            TexDumpNode (node->left, main_node, file);
-            _print (")}");
+            if (tex_dump) _print ("\\ln{(");
+            else _print ("log((");
+
+            DumpNode (node->left, main_node, file, tex_dump);
+
+            if (tex_dump) _print (")}");
+            else _print ("))");
+
+            break;
+
+        case POW:
+            if (node != main_node) _print ("(");
+
+            DumpNode (node->left, main_node, file, tex_dump);
+
+            if (tex_dump) _print ("^");
+            else _print ("**");
+
+            DumpNode (node->right, main_node, file, tex_dump);
+
+            if (node != main_node) _print (")");
+
             break;
 
         default:
             if (node != main_node) _print ("(");
-            TexDumpNode (node->left, main_node, file);
+            DumpNode (node->left, main_node, file, tex_dump);
+
             _print ("%s", OperationsArray[node->value.op]);
-            TexDumpNode (node->right, main_node, file);
+
+            DumpNode (node->right, main_node, file, tex_dump);
             if (node != main_node) _print (")");
         }
     }
 }
 
-void DumpTaylor (Node* main_node, int degree, double var)
+void TaylorGraphic (Node* taylor, Node* main_node, double x)
 {
-    FILE* tex = fopen (OUTPUT_TEX, "a");
+    assert (taylor);
+    assert (main_node);
 
-    Node* diff_node = nullptr;
-    elem_t val = Eval (main_node, var);
+    FILE* file = fopen (OUTPUT_GPI, "w");
 
-    fprintf (tex, "Если что, я настолько в своем сознании преисполнился,"
-                  "что вы можете называть меня Тейлором\\\\ \n$");
-    TexDumpNode (main_node, main_node, tex);
+    fprintf (file, R"(#! /usr/bin/gnuplot -persist
+                    set terminal png size 800, 600)"
+                    "\nset output \"%s\" \n"
+                    R"(set xlabel "x"
+                    set ylabel "y"
+                    set grid
+                    set title "Compare function with it's Taylor formula"
+                    plot )", OUTPUT_TAYLOR);
 
-    if (!is_equal (val, 0.0)) fprintf (tex, " = %lf + ", val);
-    else fprintf (tex, " = ");
+    fprintf (file, "[%lf:%lf]", x - delta, x + delta);
 
-    for (int i = 1; i <= degree; i++)
-    {
-        diff_node = Diff (main_node, nullptr);
-        Optimize (diff_node);
+    DumpNode (taylor->left, taylor->left, file, false);
 
-        val = Eval (diff_node, var);
+    fprintf (file, R"(title "Taylor", )");
 
-        if (is_equal (var, 0.0)) fprintf (tex, "\\frac{%.3lf}{%d} x^%d + ", val, Factorial (i), i);
-        else if (var < 0) fprintf (tex, "\\frac{%.3lf}{%d} (x + %.3lf)^%d + ", val, Factorial (i), -var, i);
-        else fprintf (tex, "\\frac{%.3lf}{%d} (x - %.3lf)^%d + ", val, Factorial (i), var, i);
+    DumpNode (main_node, main_node, file, false);
 
-        if (i != 1) TreeDtor (main_node);
-        main_node = diff_node;
-    }
+    fclose (file);
 
-    TreeDtor (diff_node);
+    char command[MAX_COMMAND_LENGTH] = "";
+    sprintf (command, "chmod +x %s && ./%s", OUTPUT_GPI, OUTPUT_GPI);
+    system (command);
+}
 
-    if (is_equal (var, 0.0)) fprintf (tex, "o(x^%d), x \\to 0 $", degree);
-    else if (var < 0) fprintf (tex, "o((x + %.3lf)^%d), x \\to %.3lf $", -var, degree, var);
-    else fprintf (tex, "o((x - %.3lf)^%d), x \\to %.3lf $", var, degree, var);
+void TangentGraphic (Node* node, Node* diff, double x)
+{
+    assert (node);
 
-    fclose (tex);
+    Node* tangent = Tangent (node, diff, x);
+
+    FILE* file = fopen (OUTPUT_GPI, "w");
+
+    fprintf (file, R"(#! /usr/bin/gnuplot -persist
+                    set terminal png size 800, 600)"
+                    "\nset output \"%s\"\n"
+                    R"(set xlabel "x"
+                    set ylabel "y"
+                    set grid)"
+                    "\nset title \"Function and tangent at x = %.3lf\" \n"
+                    "plot ", OUTPUT_TANGENT, x);
+
+    DumpNode (node, node, file, false);
+    fprintf (file, ", ");
+    DumpNode (tangent, tangent, file, false);
+
+    fclose (file);
+
+    char command[MAX_COMMAND_LENGTH] = "";
+    sprintf (command, "chmod +x %s && ./%s", OUTPUT_GPI, OUTPUT_GPI);
+    system (command);
+
+    TreeDtor (tangent);
 }

@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*))
+Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool))
 {
     assert (node);
 
@@ -80,7 +80,7 @@ Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*))
         return nullptr;
     }
 
-    if (DumpFunction) DumpFunction (node, diff_node, GetRandomPhraze());
+    if (DumpFunction) DumpFunction (node, diff_node, GetRandomPhraze(), true);
 
     return diff_node;
 }
@@ -175,4 +175,63 @@ Node* CopyNode (Node* original_node)
     if (original_node->right) node->right = CopyNode (original_node->right);
 
     return node;
+}
+
+Node* Taylor (Node* main_node, int degree, elem_t x)
+{
+    assert (main_node);
+
+    Node* cur_node = main_node;
+    Node* diff = main_node;
+    elem_t val = 0;
+
+    Node* taylor = _ADD (nullptr, nullptr);
+    taylor->left = _NUM (Eval (main_node, x));
+
+    for (int i = 1; i <= degree; i++)
+    {
+        diff = Diff (cur_node, nullptr);
+
+        if (cur_node != main_node) TreeDtor (cur_node);
+        cur_node = diff;
+
+        Optimize (&diff);
+        val = Eval (diff, x);
+
+        taylor->right = _DIV (_MULT (_NUM (val),
+        _POW (_SUB (_VAR ("x"), _NUM (x)), _NUM ((elem_t) i))), _NUM ((elem_t) Factorial (i)));
+
+        taylor = _ADD (taylor, nullptr);
+    }
+
+    TreeDtor (diff);
+
+    char o[MAX_VAR_LENGTH] = "";
+    if (x > 0) sprintf (o, "o((x-%.3lf)^%d)", x, degree);
+    else if (x < 0) sprintf (o, "o((x+%.3lf)^%d)", -x, degree);
+    else sprintf (o, "o(x^%d)", degree);
+
+    taylor->right = _VAR (o);
+
+    return taylor;
+}
+
+Node* Tangent (Node* node, Node* diff, double x)
+{
+    assert (node);
+
+    Node* diff_copy = diff;
+
+    if (!diff) diff = Diff (node, TexDump);
+    Optimize (&diff);
+
+    elem_t deriv_val = Eval (diff, x);
+    elem_t func_val  = Eval (node, x);
+
+    Node* tangent = CreateNode (_NUM (func_val), _MULT (_NUM (deriv_val), _SUB (_VAR ("x"), _NUM (x))), OP, ADD);
+    Optimize (&tangent);
+
+    if (!diff_copy) TreeDtor (diff);
+
+    return tangent;
 }

@@ -3,10 +3,12 @@
 
 #include "differenciator.h"
 
-const char* const OUTPUT_DOT = "dump.dot";
-const char* const OUTPUT_PNG = "tree.png";
-const char* const OUTPUT_TXT = "output.txt";
-const char* const OUTPUT_TEX = "output.tex";
+const char* const OUTPUT_DOT     = "data/dump.dot";
+const char* const OUTPUT_TREE    = "data/tree.png";
+const char* const OUTPUT_TEX     = "data/output.tex";
+const char* const OUTPUT_GPI     = "data/output.gpi";
+const char* const OUTPUT_TAYLOR  = "data/taylor.png";
+const char* const OUTPUT_TANGENT = "data/tangent.png";
 
 const char* const PHRAZES[] =
 {
@@ -18,12 +20,13 @@ const char* const PHRAZES[] =
     "Заметим, что: \\\\ \n"
 };
 
-void TexDumpDerivative (Node* node, Node* diff_node, const char* phraze);
-void DumpTaylor (Node* main_node, int degree, double var);
-void TexDumpNode (Node* node, Node* main_node, FILE* file);
-void TexDumpBegin ();
-void TexDumpEnd   ();
-void GraphDump    (Node* node);
+void TexDump           (Node* node_1, Node* node_2, const char* phraze, bool dump_derivative);
+void TaylorGraphic     (Node* node_1, Node* node_2, double x);
+void TangentGraphic    (Node* node,   Node* diff,   double x);
+void DumpNode          (Node* node, Node* main_node, FILE* file, bool tex_dump);
+void TexDumpBegin      ();
+void TexDumpEnd        ();
+void GraphDump         (Node* node);
 
 const char* GetRandomPhraze ();
 

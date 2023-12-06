@@ -4,3 +4,5 @@ main
 *.aux
 *.log
 *.tex
+*.dot
+*.gpi

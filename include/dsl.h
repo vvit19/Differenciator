@@ -9,6 +9,7 @@
 #define cR CopyNode (node->right)
 
 #define _NUM(val) CreateNode (nullptr, nullptr, NUM, val)
+#define _VAR(var) CreateNode (nullptr, nullptr, VAR, var)
 
 #define  _ADD(L, R)  CreateNode (L, R, OP, ADD )
 #define  _SUB(L, R)  CreateNode (L, R, OP, SUB )
