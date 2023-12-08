@@ -29,13 +29,6 @@ void TexDump (Node* node_1, Node* node_2, const char* phraze, bool dump_derivati
     fclose (tex);
 }
 
-const char* GetRandomPhraze ()
-{
-    tm time = {};
-    size_t phraze_num = (size_t) ((rand () - time.tm_sec) % (sizeof (PHRAZES) / sizeof (const char*)));
-    return PHRAZES[phraze_num];
-}
-
 #define _print(...) fprintf (file, __VA_ARGS__)
 
 void GraphDump (Node* node)
@@ -137,6 +130,7 @@ void TexDumpBegin ()
                  \usepackage{ragged2e}
                  \title{Учебник по матану}
                  \begin{document}
+                 \AddToShipoutPictureBG*{\includegraphics[width=\paperwidth,height=\paperheight]{data/bg.png}}
                  \maketitle
                  \begin{flushleft} )");
     _print ("\n");
@@ -286,7 +280,7 @@ void TangentGraphic (Node* node, Node* diff, double x)
 {
     assert (node);
 
-    Node* tangent = Tangent (node, diff, x);
+    Node* tangent = GetTangent (node, diff, x);
 
     FILE* file = fopen (OUTPUT_GPI, "w");
 
@@ -310,4 +304,10 @@ void TangentGraphic (Node* node, Node* diff, double x)
     system (command);
 
     TreeDtor (tangent);
+}
+
+const char* GetRandomPhraze ()
+{
+    int phraze_num = rand () % (sizeof (PHRAZES) / sizeof (const char*));
+    return PHRAZES[phraze_num];
 }

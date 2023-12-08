@@ -27,7 +27,7 @@ int main (int argc, const char** argv)
     TexDump (main_node, aboba, "Итого имеем: \\\\", true);
     GraphDump (aboba);
 
-    Node* taylor = Taylor (main_node, 5, 0.0);
+    Node* taylor = GetTaylorFormula (main_node, 5, 0.0);
     Optimize (&taylor);
     TexDump (main_node, taylor,
             "Я в своем сознании настолько преисполнился, что вы можете называть меня Тейлором: \\\\", false);

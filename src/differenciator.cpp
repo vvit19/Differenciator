@@ -113,40 +113,44 @@ elem_t Eval (Node* node, elem_t var_value)
     return NAN;
 }
 
-Node* CreateNode (Node* left, Node* right, Types type, ...)
+Node* CreateOpNode (Node* left, Node* right, Operations op)
 {
     Node* node = (Node*) calloc (1, sizeof (Node));
     assert (node);
 
-    node->left   = left;
-    node->right  = right;
-    node->type = type;
+    node->left     = left;
+    node->right    = right;
 
-    if (type == NO_TYPE) return node;
+    node->type     = OP;
+    node->value.op = op;
 
-    va_list value = {};
-    va_start (value, type);
+    return node;
+}
 
-    switch (type)
-    {
-    case OP:
-        node->value.op = (Operations) va_arg (value, int);
-        break;
+Node* CreateVarNode (Node* left, Node* right, const char* var)
+{
+    Node* node = (Node*) calloc (1, sizeof (Node));
+    assert (node);
 
-    case NUM:
-        node->value.num = va_arg (value, elem_t);
-        break;
+    node->left     = left;
+    node->right    = right;
 
-    case VAR:
-        strcpy (node->value.var, va_arg (value, const char*));
-        break;
+    node->type     = VAR;
+    strcpy (node->value.var, var);
 
-    default:
-        fprintf (stderr, "Default case reached in file: %s, function: %s, line: %d\n",
-                          __FILE__, __PRETTY_FUNCTION__, __LINE__);
-    }
+    return node;
+}
 
-    va_end (value);
+Node* CreateNumNode (Node* left, Node* right, elem_t num)
+{
+    Node* node = (Node*) calloc (1, sizeof (Node));
+    assert (node);
+
+    node->left     = left;
+    node->right    = right;
+
+    node->type     = NUM;
+    node->value.num = num;
 
     return node;
 }
@@ -177,7 +181,7 @@ Node* CopyNode (Node* original_node)
     return node;
 }
 
-Node* Taylor (Node* main_node, int degree, elem_t x)
+Node* GetTaylorFormula (Node* main_node, int degree, elem_t x)
 {
     assert (main_node);
 
@@ -216,7 +220,7 @@ Node* Taylor (Node* main_node, int degree, elem_t x)
     return taylor;
 }
 
-Node* Tangent (Node* node, Node* diff, double x)
+Node* GetTangent (Node* node, Node* diff, double x)
 {
     assert (node);
 
@@ -228,7 +232,7 @@ Node* Tangent (Node* node, Node* diff, double x)
     elem_t deriv_val = Eval (diff, x);
     elem_t func_val  = Eval (node, x);
 
-    Node* tangent = CreateNode (_NUM (func_val), _MULT (_NUM (deriv_val), _SUB (_VAR ("x"), _NUM (x))), OP, ADD);
+    Node* tangent = CreateOpNode (_NUM (func_val), _MULT (_NUM (deriv_val), _SUB (_VAR ("x"), _NUM (x))), ADD);
     Optimize (&tangent);
 
     if (!diff_copy) TreeDtor (diff);

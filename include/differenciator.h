@@ -75,14 +75,16 @@ struct Token
     Value value;
 };
 
-Node*  Diff       (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool));
-elem_t Eval       (Node* node, elem_t var_value);
-Node*  CreateNode (Node* left, Node* right, Types type, ...);
-Node*  CopyNode   (Node* original_node);
-void   TreeDtor   (Node* node);
-Node*  GetGrammar (char* buffer);
-void   Optimize   (Node** node);
-Node*  Taylor     (Node* main_node, int degree, elem_t var_value);
-Node*  Tangent    (Node* node, Node* diff, double x);
+Node*  Diff                 (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool));
+elem_t Eval                 (Node* node, elem_t var_value);
+Node*  CreateNumNode        (Node* left, Node* right, elem_t num);
+Node*  CreateVarNode        (Node* left, Node* right, const char* var);
+Node*  CreateOpNode         (Node* left, Node* right, Operations op);
+Node*  CopyNode             (Node* original_node);
+void   TreeDtor             (Node* node);
+Node*  GetGrammar           (char* buffer);
+void   Optimize             (Node** node);
+Node*  GetTaylorFormula     (Node* main_node, int degree, elem_t var_value);
+Node*  GetTangent           (Node* node, Node* diff, double x);
 
 #endif

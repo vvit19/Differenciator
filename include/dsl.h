@@ -8,16 +8,19 @@
 #define cL CopyNode (node->left)
 #define cR CopyNode (node->right)
 
-#define _NUM(val) CreateNode (nullptr, nullptr, NUM, val)
-#define _VAR(var) CreateNode (nullptr, nullptr, VAR, var)
+#define _NUM(val) CreateNumNode (nullptr, nullptr, val)
+#define _VAR(var) CreateVarNode (nullptr, nullptr, var)
 
-#define  _ADD(L, R)  CreateNode (L, R, OP, ADD )
-#define  _SUB(L, R)  CreateNode (L, R, OP, SUB )
-#define _MULT(L, R)  CreateNode (L, R, OP, MULT)
-#define  _DIV(L, R)  CreateNode (L, R, OP, DIV )
-#define  _SIN(L, R)  CreateNode (L, R, OP, SIN )
-#define  _COS(L, R)  CreateNode (L, R, OP, COS )
-#define  _POW(L, R)  CreateNode (L, R, OP, POW )
-#define   _LN(L, R)  CreateNode (L, R, OP, LN  )
+#define  _ADD(L, R)  CreateOpNode (L, R, ADD )
+#define  _SUB(L, R)  CreateOpNode (L, R, SUB )
+#define _MULT(L, R)  CreateOpNode (L, R, MULT)
+#define  _DIV(L, R)  CreateOpNode (L, R, DIV )
+#define  _SIN(L, R)  CreateOpNode (L, R, SIN )
+#define  _COS(L, R)  CreateOpNode (L, R, COS )
+#define  _POW(L, R)  CreateOpNode (L, R, POW )
+#define   _LN(L, R)  CreateOpNode (L, R, LN  )
+
+#define CUR_TOKEN  tokens[*cur_token]
+#define NEXT_TOKEN tokens[*cur_token + 1]
 
 #endif

@@ -6,3 +6,4 @@ main
 *.tex
 *.dot
 *.gpi
+data/bg.png:Zone.Identifier
