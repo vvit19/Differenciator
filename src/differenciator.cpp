@@ -5,6 +5,8 @@
 
 #include <cmath>
 
+static bool FindVariables (Node* node);
+
 Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool))
 {
     assert (node);
@@ -17,72 +19,95 @@ Node* Diff (Node* node, void (*DumpFunction) (Node*, Node*, const char*, bool))
     switch (node->value.op)
     {
     case ADD:
-    {
-        diff_node = _ADD (dL, dR);
-        break;
-    }
-
-    case SUB:
-    {
-        diff_node = _SUB (dL, dR);
-        break;
-    }
-
-    case MULT:
-    {
-        diff_node = _ADD (_MULT (dL, cR), _MULT (cL, dR));
-        break;
-    }
-
-    case DIV:
-    {
-        diff_node = _DIV (_SUB (_MULT (dL, cR), _MULT (cL, dR)), _POW (cR, _NUM(2.0)));
-        break;
-    }
-
-    case SIN:
-    {
-        diff_node = _MULT (_COS (cL, nullptr), dL);
-        break;
-    }
-
-    case COS:
-    {
-        diff_node = _MULT (_MULT (_SIN (cL, nullptr), dL), _NUM(-1.0));
-        break;
-    }
-
-    case LN:
-    {
-        diff_node = _MULT (_DIV (_NUM(1.0), cL), dL);
-        break;
-    }
-
-    case POW:
-    {
-        if (node->left->type != NUM && node->right->type != NUM)
         {
-            fprintf (stderr, "f(x)^g(x) format isn't supported\n");
-            return nullptr;
+            diff_node = _ADD (dL, dR);
+            break;
         }
 
-        if (node->right->type == NUM)
-            diff_node = _MULT (_MULT (cR, _POW (cL, _NUM(node->right->value.num - 1))), dL);
-        else
-            diff_node = _MULT (_MULT (_POW (cL, cR), _LN(cL, nullptr)), dR);
+    case SUB:
+        {
+            diff_node = _SUB (dL, dR);
+            break;
+        }
 
-        break;
-    }
+    case MULT:
+        {
+            diff_node = _ADD (_MULT (dL, cR), _MULT (cL, dR));
+            break;
+        }
+
+    case DIV:
+        {
+            diff_node = _DIV (_SUB (_MULT (dL, cR), _MULT (cL, dR)), _POW (cR, _NUM(2.0)));
+            break;
+        }
+
+    case SIN:
+        {
+            diff_node = _MULT (_COS (cL), dL);
+            break;
+        }
+
+    case COS:
+        {
+            diff_node = _MULT (_MULT (_SIN (cL), dL), _NUM(-1.0));
+            break;
+        }
+
+    case LN:
+        {
+            diff_node = _MULT (_DIV (_NUM(1.0), cL), dL);
+            break;
+        }
+
+    case POW:
+        {
+            bool left_var  = FindVariables (node->left);
+            bool right_var = FindVariables (node->right);
+
+            if (left_var && right_var)
+            {
+                Node* sub_node =  Diff (_MULT (_LN (cL), cR), DumpFunction);
+                diff_node = _MULT (_POW (cL, cR), sub_node);
+                free (sub_node);
+            }
+            else
+            {
+                if (left_var) diff_node = _MULT (_MULT (cR, _POW (cL, _NUM(node->right->value.num - 1))), dL);
+                else if (right_var) diff_node = _MULT (_MULT (_POW (cL, cR), _LN(cL)), dR);
+            }
+
+            break;
+        }
 
     default:
-        fprintf (stderr, "Default case reached in file: %s, function: %s, line: %d\n",
-                          __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        {
+        NO_PROPER_CASE_FOUND;
+
         return nullptr;
+        }
     }
 
     if (DumpFunction) DumpFunction (node, diff_node, GetRandomPhraze(), true);
 
     return diff_node;
+}
+
+static bool FindVariables (Node* node)
+{
+    assert (node);
+
+    bool var = false;
+
+    if (node->left)  var = FindVariables (node->left);
+    if (var) return var;
+
+    if (node->right) var = FindVariables (node->right);
+    if (var) return var;
+
+    if (node->type == VAR) var = true;
+
+    return var;
 }
 
 elem_t Eval (Node* node, elem_t var_value)
@@ -146,10 +171,10 @@ Node* CreateNumNode (Node* left, Node* right, elem_t num)
     Node* node = (Node*) calloc (1, sizeof (Node));
     assert (node);
 
-    node->left     = left;
-    node->right    = right;
+    node->left      = left;
+    node->right     = right;
 
-    node->type     = NUM;
+    node->type      = NUM;
     node->value.num = num;
 
     return node;

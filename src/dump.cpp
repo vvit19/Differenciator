@@ -15,11 +15,13 @@ void TexDump (Node* node_1, Node* node_2, const char* phraze, bool dump_derivati
     assert (phraze);
 
     FILE* tex = fopen (OUTPUT_TEX, "a");
+
     fprintf (tex, "%s", phraze);
     fprintf (tex, "$");
     if (dump_derivative) fprintf (tex, "(");
 
     DumpNode (node_1, node_1, tex, true);
+
     if (dump_derivative) fprintf (tex, ")' = ");
     else fprintf (tex, " = ");
 
@@ -128,11 +130,11 @@ void TexDumpBegin ()
                  \usepackage[english,russian]{babel}
                  \usepackage{pdfpages}
                  \usepackage{ragged2e}
-                 \title{Учебник по матану}
+                 \title{\begin{flushright}\textbf{\\Учебник по матану}\end{flushright}}
                  \begin{document}
                  \AddToShipoutPictureBG*{\includegraphics[width=\paperwidth,height=\paperheight]{data/bg.png}}
                  \maketitle
-                 \begin{flushleft} )");
+                 \begin{flushright} )");
     _print ("\n");
 
     fclose (file);
@@ -145,7 +147,7 @@ void TexDumpEnd ()
     _print ("\\begin{center} \\includegraphics[scale=0.6]{%s} \\end{center}\n", OUTPUT_TAYLOR);
     _print ("\\begin{center} \\includegraphics[scale=0.6]{%s} \\end{center}\n", OUTPUT_TANGENT);
 
-    _print (R"(\end{flushleft}
+    _print (R"(\end{flushright}
                \end{document})");
 
     fclose (file);
@@ -224,10 +226,13 @@ void DumpNode (Node* node, Node* main_node, FILE* file, bool tex_dump)
 
             DumpNode (node->left, main_node, file, tex_dump);
 
-            if (tex_dump) _print ("^");
-            else _print ("**");
+            if (tex_dump) _print ("^{");
+            else _print ("**(");
 
             DumpNode (node->right, main_node, file, tex_dump);
+
+            if (tex_dump) _print ("}");
+            else _print (")");
 
             if (node != main_node) _print (")");
 
@@ -261,7 +266,7 @@ void TaylorGraphic (Node* taylor, Node* main_node, double x)
                     set title "Compare function with it's Taylor formula"
                     plot )", OUTPUT_TAYLOR);
 
-    fprintf (file, "[%lf:%lf]", x - delta, x + delta);
+    fprintf (file, "[%lf:%lf] ", x - DELTA, x + DELTA);
 
     DumpNode (taylor->left, taylor->left, file, false);
 
@@ -293,9 +298,11 @@ void TangentGraphic (Node* node, Node* diff, double x)
                     "\nset title \"Function and tangent at x = %.3lf\" \n"
                     "plot ", OUTPUT_TANGENT, x);
 
-    DumpNode (node, node, file, false);
-    fprintf (file, ", ");
+    fprintf (file, "[%lf:%lf]", x - DELTA, x + DELTA);
+
     DumpNode (tangent, tangent, file, false);
+    fprintf (file, ", ");
+    DumpNode (node, node, file, false);
 
     fclose (file);
 

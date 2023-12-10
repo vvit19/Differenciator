@@ -12,9 +12,10 @@
 
 typedef double elem_t;
 
-const int MAX_VAR_LENGTH  = 20;
-const int MAX_COMMAND_LENGTH = 100;
-const int delta = 3;
+const elem_t EXP                = 2.7182818284;
+const int    MAX_VAR_LENGTH     = 20;
+const int    MAX_COMMAND_LENGTH = 100;
+const int    DELTA              = 2;
 
 enum Ways
 {

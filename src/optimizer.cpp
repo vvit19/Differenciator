@@ -1,4 +1,5 @@
 #include "differenciator.h"
+#include "dsl.h"
 
 static bool OptimizeConstants (Node* node, bool* has_optimized);
 static int  OptimizeNeutrals  (Node** parent, Node* node, bool* has_optimized);
@@ -65,8 +66,8 @@ int OptimizeNeutrals (Node** parent, Node* node, bool* has_optimized)
     if (node->left)  optimize_left  = OptimizeNeutrals (&node, node->left,  has_optimized);
     if (node->right) optimize_right = OptimizeNeutrals (&node, node->right, has_optimized);
 
-    if ( (optimize_left  == 0 && (node->value.op == MULT || node->value.op == DIV || node->value.op == POW)) ||
-         (optimize_right == 0 && (node->value.op == MULT)) )
+    if ( (optimize_left  == 0 && (CUR_OP == MULT || CUR_OP == DIV || CUR_OP == POW)) ||
+         (optimize_right == 0 && (CUR_OP == MULT)) )
     {
         node->value.num = 0;
         node->type = NUM;
@@ -79,16 +80,16 @@ int OptimizeNeutrals (Node** parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
-    else if (optimize_left == 0 && node->value.op == SUB)
+    else if (optimize_left == 0 && CUR_OP == SUB)
     {
         node->left->type = NUM;
         node->left->value.num = -1;
 
-        node->value.op = MULT;
+        CUR_OP = MULT;
 
         *has_optimized = true;
     }
-    else if ((optimize_left == 0 && node->value.op == ADD) || (optimize_left == 1 && node->value.op == MULT))
+    else if ((optimize_left == 0 && CUR_OP == ADD) || (optimize_left == 1 && CUR_OP == MULT))
     {
         if (node == *parent)
         {
@@ -106,7 +107,7 @@ int OptimizeNeutrals (Node** parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
-    else if (optimize_left == 1 && node->value.op == POW)
+    else if (optimize_left == 1 && CUR_OP == POW)
     {
         node->type = NUM;
         node->value.num = 1;
@@ -119,10 +120,11 @@ int OptimizeNeutrals (Node** parent, Node* node, bool* has_optimized)
 
         *has_optimized = true;
     }
-    else if ((optimize_right == 0 && node->value.op == ADD)  ||
-             (optimize_right == 1 && node->value.op == MULT) ||
-             (optimize_right == 0 && node->value.op == SUB)  ||
-             (optimize_right == 1 && node->value.op == POW))
+    else if ((optimize_right == 0 && CUR_OP == ADD)  ||
+             (optimize_right == 1 && CUR_OP == MULT) ||
+             (optimize_right == 0 && CUR_OP == SUB)  ||
+             (optimize_right == 1 && CUR_OP == POW)  ||
+             (optimize_right == 1 && CUR_OP == DIV))
     {
         if (node == *parent) *parent = node->left;
         else

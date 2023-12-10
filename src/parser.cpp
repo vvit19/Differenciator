@@ -17,6 +17,27 @@ static Node* GetBrackets    (Token* tokens, int* cur_token, ExitCodes* exit_code
 static Node* GetVariable    (Token* tokens, int* cur_token, ExitCodes* exit_code); // variables
 static Node* GetNumber      (Token* tokens, int* cur_token, ExitCodes* exit_code); // numbers
 
+Node* GetGrammar (char* buffer)
+{
+    Token tokens[MAX_TOKENS] = {};
+
+    Lexer (tokens, buffer);
+
+    ExitCodes exit_code = NO_ERR;
+    int cur_token = 0;
+    Node* main_node = GetExpression (tokens, &cur_token, &exit_code);
+
+    SYNT_ASSERT (&exit_code, tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
+
+    if (exit_code == ERR)
+    {
+        TreeDtor (main_node);
+        return nullptr;
+    }
+
+    return main_node;
+}
+
 static Node* GetExpression (Token* tokens, int* cur_token, ExitCodes* exit_code)
 {
     assert (tokens);
@@ -169,27 +190,6 @@ static Node* GetNumber (Token* tokens, int* cur_token, ExitCodes* exit_code)
     {
         main_node = _NUM (CUR_TOKEN.value.num);
         *cur_token += 1;
-    }
-
-    return main_node;
-}
-
-Node* GetGrammar (char* buffer)
-{
-    Token tokens[MAX_TOKENS] = {};
-
-    Lexer (tokens, buffer);
-
-    ExitCodes exit_code = NO_ERR;
-    int cur_token = 0;
-    Node* main_node = GetExpression (tokens, &cur_token, &exit_code);
-
-    SYNT_ASSERT (&exit_code, tokens[cur_token].type == OP && tokens[cur_token].value.op == END);
-
-    if (exit_code == ERR)
-    {
-        TreeDtor (main_node);
-        return nullptr;
     }
 
     return main_node;
